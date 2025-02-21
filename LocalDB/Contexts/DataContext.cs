@@ -17,27 +17,36 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
 
     public DbSet<ServiceEntity> Services { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CustomerEntity>()
             .HasOne(c => c.Contact)
             .WithMany(c => c.Customers)
-            .HasForeignKey(c => c.ContactId);
+            .HasForeignKey(c => c.ContactId)
+            .OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<EmployeeEntity>()
             .HasOne(e => e.Role)
             .WithMany(r => r.Employees)
-            .HasForeignKey(e => e.RoleId);
+            .HasForeignKey(e => e.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<ProjectEntity>()
             .HasOne(p => p.Customer)
             .WithMany(c => c.Projects)
-            .HasForeignKey(p => p.CustomerId);
+            .HasForeignKey(p => p.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<ProjectEntity>()
             .HasOne(p => p.Service)
             .WithMany(s => s.Projects)
-            .HasForeignKey(p => p.ServiceId);
+            .HasForeignKey(p => p.ServiceId)
+            .OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<ProjectEntity>()
             .HasOne(p => p.Employee)
             .WithMany(e => e.Projects)
-            .HasForeignKey(p => p.EmployeeId);
+            .HasForeignKey(p => p.EmployeeId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<ProjectEntity>()
+            .Property(p => p.Status)
+            .HasConversion<string>();
     }
 }

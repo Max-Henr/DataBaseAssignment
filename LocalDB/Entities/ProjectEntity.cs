@@ -13,7 +13,7 @@ public class ProjectEntity
     [Required]
     public string Description { get; set; } = null!;
     [Required]
-    public string Status { get; set; } = null!;
+    public ProjectStatus Status { get; set; }
     [Required]
     public DateTime StartDate { get; set; }
     [Required]

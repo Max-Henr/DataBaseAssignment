@@ -1,4 +1,6 @@
-﻿namespace Business.Dtos;
+﻿using Data.Entities;
+
+namespace Business.Dtos;
 
 public class ProjectRegistrationForm
 {
@@ -6,7 +8,7 @@ public class ProjectRegistrationForm
     public string Description { get; set; } = null!;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public string Status { get; set; } = null!;
+    public ProjectStatus Status { get; set; }
     public int CustomerId { get; set; }
     public int EmployeeId { get; set; }
     public int ServiceId { get; set; }
