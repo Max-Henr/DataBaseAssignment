@@ -1,0 +1,10 @@
+.appBar_flex {
+  display: flex;
+  justify-content: center;
+}
+.appBar {
+  width: 1280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+}
