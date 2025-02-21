@@ -1,14 +1,16 @@
-﻿using Data.Entities;
+﻿using System.Linq.Expressions;
+using Business.Dtos;
+using Business.Models;
+using Data.Entities;
 
 namespace Business.Interfaces
 {
     public interface IContactService
     {
-        ContactEntity CreateContact(ContactEntity contactEntity);
-        bool DeleteContactById(int id);
-        ContactEntity GetContactByEmail(string email);
-        ContactEntity GetContactById(int id);
-        IEnumerable<ContactEntity> GetContacts();
-        ContactEntity UpdateContact(ContactEntity contactEntity);
+        Task<bool> CreateContact(ContactRegistrationForm form);
+        Task<IEnumerable<Contact>> GetAllContacts();
+        Task<ContactEntity> GetContactById(int id);
+        Task<Contact?> UpdateContact(ContactUpdateForm form);
+        Task<bool> DeleteContact(int id);
     }
 }

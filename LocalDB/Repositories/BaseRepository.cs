@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using Data.Contexts;
 using Data.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Data.Repositories;
 
@@ -10,22 +11,46 @@ public abstract class BaseRepository<TEntity>(DataContext context) : IBaseReposi
 {
     private readonly DataContext _context = context;
     private readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
+    private IDbContextTransaction _transaction = null!;
+
+    public virtual async Task BeginTransactionAsync()
+    {
+        _transaction ??= await _context.Database.BeginTransactionAsync();
+    }
+
+    public virtual async Task CommitTransactionAsync()
+    {
+        if (_transaction != null)
+        {
+            await _transaction.CommitAsync();
+            await _transaction.DisposeAsync();
+            _transaction = null!;
+        }
+    }
+    public async Task RollbackTransactionAsync()
+    {
+        if (_transaction != null)
+        {
+            await _transaction.RollbackAsync();
+            await _transaction.DisposeAsync();
+            _transaction = null!;
+        }
+    }
 
     //Create
-    public virtual async Task<TEntity> CreateAsync(TEntity entity)
+    public virtual async Task<bool> CreateAsync(TEntity entity)
     {
         if (entity == null)
-            return null!;
+            return false;
         try
         {
             await _dbSet.AddAsync(entity);
-            await _context.SaveChangesAsync();
-            return entity;
+            return true;
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Error Creating {nameof(TEntity)} entity :: {ex.Message}");
-            return null!;
+            return false;
         }
 
     }
@@ -64,7 +89,6 @@ public abstract class BaseRepository<TEntity>(DataContext context) : IBaseReposi
                 return null!;
 
             _context.Entry(exisitngEntity).CurrentValues.SetValues(updatedEntity);
-            await _context.SaveChangesAsync();
             return exisitngEntity;
         }
         catch (Exception ex)
@@ -86,12 +110,25 @@ public abstract class BaseRepository<TEntity>(DataContext context) : IBaseReposi
             if (entity == null)
                 return false;
             _dbSet.Remove(entity);
-            await _context.SaveChangesAsync();
             return true;
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Error Deleting {nameof(TEntity)} entity :: {ex.Message}");
+            return false;
+        }
+    }
+
+    public virtual async Task<bool> SaveChangesAsync()
+    {
+        try
+        {
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error Saving Changes :: {ex.Message}");
             return false;
         }
     }

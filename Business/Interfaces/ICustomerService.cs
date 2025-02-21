@@ -1,14 +1,14 @@
 ﻿using Business.Dtos;
+using Business.Models;
 using Data.Entities;
 
 namespace Business.Interfaces
 {
     public interface ICustomerService
     {
-        CustomerEntity CreateCustomer(CustomerEntity customerEntity);
-        bool DeleteCustomerById(int id);
-        CustomerEntity GetCustomerById(int id);
-        IEnumerable<CustomerEntity> GetCustomers();
-        CustomerEntity UpdateCustomer(CustomerEntity CustomerEntity);
+        Task<bool> CreateCustomer(CustomerRegistrationForm form);
+        Task<IEnumerable<Customer>> GetAllCustomers();
+        Task<Customer?> UpdateCustomer(CustomerUpdateForm form);
+        Task<bool> DeleteCustomer(int id);
     }
 }

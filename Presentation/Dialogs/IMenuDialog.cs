@@ -2,10 +2,12 @@
 {
     public interface IMenuDialog
     {
-        void NewContactDialog();
-        void NewCustomerDialog();
-        void Show();
-        void ViewAllContactDialog();
-        void ViewAllCustomerDialog();
+        Task NewContactDialog();
+        Task NewCustomerDialog();
+        Task Show();
+        Task ViewAllContactDialog();
+        Task ViewAllCustomerDialog();
+        Task ViewAllRoles();
+        Task NewRoleDialog();
     }
 }

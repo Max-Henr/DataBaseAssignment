@@ -1,14 +1,16 @@
-﻿using Business.Interfaces;
+﻿using Business.Dtos;
+using Business.Interfaces;
 using Data.Entities;
 
 namespace Presentation.Dialogs;
 
-public class MenuDialog(IContactService contactService, ICustomerService customerService) : IMenuDialog
+public class MenuDialog(IContactService contactService, ICustomerService customerService, IRoleService roleService) : IMenuDialog
 {
     private readonly IContactService _contactService = contactService;
     private readonly ICustomerService _customerService = customerService;
+    private readonly IRoleService _roleService = roleService;
 
-    public void Show()
+    public async Task Show()
     {
         do
         {
@@ -18,6 +20,8 @@ public class MenuDialog(IContactService contactService, ICustomerService custome
             Console.WriteLine("2. View All Contacts");
             Console.WriteLine("3. Create New Customer");
             Console.WriteLine("4. View All Customers");
+            Console.WriteLine("6. View All Roles");
+            Console.WriteLine("7. Create New Role");
             Console.WriteLine("5. Exit");
             Console.Write("Enter Your Choice: ");
             var choice = Console.ReadLine();
@@ -30,13 +34,19 @@ public class MenuDialog(IContactService contactService, ICustomerService custome
                     ViewAllContactDialog();
                     break;
                 case "3":
-                    NewCustomerDialog(); 
+                    NewCustomerDialog();
                     break;
                 case "4":
                     ViewAllCustomerDialog();
                     break;
                 case "5":
                     return;
+                case "6":
+                    await ViewAllRoles();
+                    break;
+                case "7":
+                    await NewRoleDialog();
+                    break;
                 default:
                     Console.WriteLine("Invalid Choice, Please Try Again!");
                     Console.ReadKey();
@@ -46,65 +56,70 @@ public class MenuDialog(IContactService contactService, ICustomerService custome
     }
 
 
-    public void NewCustomerDialog()
+    public async Task NewCustomerDialog()
     {
-        var customerEntity = new CustomerEntity();
 
         Console.Clear();
         Console.WriteLine("--- Creating New Customer ---");
         Console.Write("Name: ");
-        customerEntity.Name = Console.ReadLine();
+        var Name = Console.ReadLine();
         Console.Write("Contact Id: ");
-        customerEntity.ContactId = int.Parse(Console.ReadLine());
+        var ContactId = int.Parse(Console.ReadLine());
 
-        var result = _customerService.CreateCustomer(customerEntity);
-        if (result != null)
+        var registrationForm = new CustomerRegistrationForm
         {
-            Console.WriteLine($"Customer Was Created With Id '{result.Id}'");
-            Console.WriteLine($"Name: {result.Name} Contact Id: {result.ContactId}");
+            Name = Name,
+            ContactId = ContactId
+        };
+        var result = await _customerService.CreateCustomer(registrationForm);
+        if (result)
+        {
+            Console.WriteLine("Customer Was Created Successfully");
         }
         else { Console.Write("Something Went Wrong When Trying To Create Customer"); }
 
         Console.ReadKey();
     }
-    public void ViewAllCustomerDialog()
+    public async Task ViewAllCustomerDialog()
     {
+        var customers = await _customerService.GetAllCustomers();
+
         Console.Clear();
         Console.WriteLine("--- View All Customers ---");
-        var result = _customerService.GetCustomers();
-        if (result.Any())
+
+        foreach (var customer in customers)
         {
-            foreach (var customer in result)
-            {
-                Console.WriteLine($"Id: {customer.Id}, Name: {customer.Name}, Contact Person: {customer.Contact.FirstName} {customer.Contact.LastName} {customer.Contact.Email} {customer.Contact.PhoneNumber}");
-            }
-        }
-        else
-        {
-            Console.Write("No Customer Was Found!");
+            var contact = await _contactService.GetContactById(customer.ContactId);
+            var contactName = contact != null ? $"{contact.FirstName} {contact.LastName}" : "Unknown";
+            Console.WriteLine($"Id: {customer.Id}, Name: {customer.Name}, Contact Id: {customer.ContactId}, Contact Person: {contactName}");
         }
         Console.ReadKey();
     }
-    public void NewContactDialog()
+    public async Task NewContactDialog()
     {
-        var contactEntity = new ContactEntity();
 
         Console.Clear();
         Console.WriteLine("--- Creating New Contact ---");
         Console.Write("First Name: ");
-        contactEntity.FirstName = Console.ReadLine();
+        var FirstName = Console.ReadLine();
         Console.Write("Last Name: ");
-        contactEntity.LastName = Console.ReadLine();
+        var LastName = Console.ReadLine();
         Console.Write("Email: ");
-        contactEntity.Email = Console.ReadLine();
+        var Email = Console.ReadLine();
         Console.Write("Phone Number: ");
-        contactEntity.PhoneNumber = Console.ReadLine();
+        var PhoneNumber = Console.ReadLine();
 
-        var result = _contactService.CreateContact(contactEntity);
-        if (result != null)
+        var registrationForm = new ContactRegistrationForm
         {
-            Console.WriteLine($"Following Contact Was Created With Id '{result.Id}'");
-            Console.WriteLine($"{result.FirstName} {result.LastName} <{result.Email}>");
+            FirstName = FirstName,
+            LastName = LastName,
+            Email = Email,
+            PhoneNumber = PhoneNumber
+        };
+        var result = await _contactService.CreateContact(registrationForm);
+        if (result)
+        {
+            Console.WriteLine("Contact Was Created Successfully");
         }
         else
         {
@@ -114,23 +129,51 @@ public class MenuDialog(IContactService contactService, ICustomerService custome
         Console.ReadKey();
     }
 
-    public void ViewAllContactDialog()
+    public async Task ViewAllContactDialog()
     {
+        var contacts = await _contactService.GetAllContacts();
         Console.Clear();
         Console.WriteLine("--- View All Contacts ---");
 
-        var result = _contactService.GetContacts();
-        if (result.Any())
+        foreach (var contact in contacts)
         {
-            foreach (var contact in result)
-            {
-                Console.WriteLine($"Id: {contact.Id}, Info: {contact.FirstName} {contact.LastName} <{contact.Email}>");
-            }
+            Console.WriteLine($"Id: {contact.Id}, First Name: {contact.FirstName}, Last Name: {contact.LastName}, Email: {contact.Email}, Phone Number: {contact.PhoneNumber}");
+        }
+
+        Console.ReadKey();
+    }
+
+    public async Task ViewAllRoles()
+    {
+        var roles = await _roleService.GetAllRoles();
+        Console.Clear();
+        Console.WriteLine("--- View All Roles ---");
+
+        foreach (var role in roles)
+        {
+            Console.WriteLine($"Id: {role.Id}, Role Name: {role.RoleName}");
+        }
+        Console.ReadKey();
+    }
+    public async Task NewRoleDialog()
+    { 
+
+        Console.Clear();
+        Console.WriteLine("--- Creating New Role ---");
+        Console.Write("Role Name: ");
+        var RoleName = Console.ReadLine();
+        var registrationForm = new RoleRegistrationForm
+        {
+            RoleName = RoleName
+        };
+        var result = await _roleService.CreateRole(registrationForm);
+        if (result)
+        {
+            Console.WriteLine("Role Was Created Successfully");
         }
         else
         {
-            Console.Write("No Contact Was Found!");
+            Console.Write("Something Went Wrong When Trying To Create Role");
         }
-        Console.ReadKey();
     }
 }
